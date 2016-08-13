@@ -66,12 +66,22 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		geoip-dev \
 		perl-dev \
 	&& apk add --no-cache --virtual .brotli-build-deps \
+		autoconf \
+		libtool \
+		automake \
 		git \
 		g++ \
 	&& mkdir -p /usr/src \
 	&& cd /usr/src \
+	&& git clone --depth 1 https://github.com/bagder/libbrotli.git \
+	&& cd libbrotli \
+	&& ./autogen.sh \
+	&& ./configure \
+	&& make \
+	&& make install \
+	&& cd .. \
+	&& rm -rf libbrotli \
 	&& git clone --depth 1 https://github.com/google/ngx_brotli.git \
-	&& export NGX_BROTLI_STATIC_MODULE_ONLY=1 \
 	&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
 	&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
 	&& export GNUPGHOME="$(mktemp -d)" \
