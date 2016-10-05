@@ -1,0 +1,11 @@
+language: generic
+
+services:
+  - docker
+
+install:
+  - docker build -t nginx-brotli .
+
+script:
+  - sh runTests.sh
+
