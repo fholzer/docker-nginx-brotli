@@ -48,6 +48,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		--with-http_v2_module \
 		--with-ipv6 \
 		--add-module=/usr/src/ngx_brotli \
+                --with-cc-opt=-Wno-error \
 	" \
 	&& addgroup -S nginx \
 	&& adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
@@ -71,17 +72,17 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		automake \
 		git \
 		g++ \
+		cmake \
 	&& mkdir -p /usr/src \
 	&& cd /usr/src \
-	&& git clone --depth 1 https://github.com/bagder/libbrotli.git \
-	&& cd libbrotli \
-	&& ./autogen.sh \
-	&& ./configure \
+	&& git clone --depth 1 -b installHeaders https://github.com/fholzer/brotli.git \
+	&& cd brotli \
+	&& cmake -DBUILD_SHARED_LIBS=ON \
 	&& make \
 	&& make install \
 	&& cd .. \
-	&& rm -rf libbrotli \
-	&& git clone --depth 1 https://github.com/google/ngx_brotli.git \
+	&& rm -rf brotli \
+	&& git clone --depth 1 -b fixBrotliLinking https://github.com/fholzer/ngx_brotli.git \
 	&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
 	&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
 	&& export GNUPGHOME="$(mktemp -d)" \
