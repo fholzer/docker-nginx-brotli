@@ -75,7 +75,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		cmake \
 	&& mkdir -p /usr/src \
 	&& cd /usr/src \
-	&& git clone --depth 1 -b installHeaders https://github.com/fholzer/brotli.git \
+	&& git clone --depth 1 https://github.com/google/brotli.git \
 	&& cd brotli \
 	&& cmake -DBUILD_SHARED_LIBS=ON \
 	&& make -j$(getconf _NPROCESSORS_ONLN) \
