@@ -77,7 +77,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& cd /usr/src \
 	&& git clone --depth 1 https://github.com/google/brotli.git \
 	&& cd brotli \
-	&& cmake -DBUILD_SHARED_LIBS=ON \
+	&& cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=/usr/lib -DBUILD_SHARED_LIBS=ON \
 	&& make -j$(getconf _NPROCESSORS_ONLN) \
 	&& make install \
 	&& cd .. \
