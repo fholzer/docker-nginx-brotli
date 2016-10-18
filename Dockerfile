@@ -3,6 +3,8 @@ FROM alpine:3.4
 MAINTAINER NGINX Docker Maintainers "docker-maint@nginx.com"
 
 ENV NGINX_VERSION 1.10.1
+ENV BROTLI_COMMIT 1b364aeb42a0919e7c08646aa4f2f50e28d69fa5
+ENV NGX_BROTLI_COMMIT 12529813a9f8475718370a19007c7905601a62ad
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& CONFIG="\
@@ -75,14 +77,18 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		cmake \
 	&& mkdir -p /usr/src \
 	&& cd /usr/src \
-	&& git clone --depth 1 https://github.com/google/brotli.git \
+	&& git clone https://github.com/google/brotli.git \
 	&& cd brotli \
+	&& git checkout -b $BROTLI_COMMIT $BROTLI_COMMIT \
 	&& cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=/usr/lib -DBUILD_SHARED_LIBS=ON \
 	&& make -j$(getconf _NPROCESSORS_ONLN) \
 	&& make install \
 	&& cd .. \
 	&& rm -rf brotli \
-	&& git clone --depth 1 -b fixBrotliLinking https://github.com/fholzer/ngx_brotli.git \
+	&& git clone https://github.com/google/ngx_brotli.git \
+	&& cd ngx_brotli \
+	&& git checkout -b $NGX_BROTLI_COMMIT $NGX_BROTLI_COMMIT \
+	&& cd .. \
 	&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
 	&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
 	&& export GNUPGHOME="$(mktemp -d)" \
