@@ -3,8 +3,7 @@ FROM alpine:3.4
 MAINTAINER NGINX Docker Maintainers "docker-maint@nginx.com"
 
 ENV NGINX_VERSION 1.10.3
-ENV BROTLI_COMMIT 1b364aeb42a0919e7c08646aa4f2f50e28d69fa5
-ENV NGX_BROTLI_COMMIT 12529813a9f8475718370a19007c7905601a62ad
+ENV NGX_BROTLI_COMMIT bfd2885b2da4d763fed18f49216bb935223cd34b 
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& CONFIG="\
@@ -77,15 +76,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		cmake \
 	&& mkdir -p /usr/src \
 	&& cd /usr/src \
-	&& git clone https://github.com/google/brotli.git \
-	&& cd brotli \
-	&& git checkout -b $BROTLI_COMMIT $BROTLI_COMMIT \
-	&& cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=/usr/lib -DBUILD_SHARED_LIBS=ON \
-	&& make -j$(getconf _NPROCESSORS_ONLN) \
-	&& make install \
-	&& cd .. \
-	&& rm -rf brotli \
-	&& git clone https://github.com/google/ngx_brotli.git \
+	&& git clone --recursive https://github.com/google/ngx_brotli.git \
 	&& cd ngx_brotli \
 	&& git checkout -b $NGX_BROTLI_COMMIT $NGX_BROTLI_COMMIT \
 	&& cd .. \
