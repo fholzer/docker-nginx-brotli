@@ -2,7 +2,7 @@ FROM alpine:3.6
 
 MAINTAINER NGINX Docker Maintainers "docker-maint@nginx.com"
 
-ENV NGINX_VERSION 1.14.1
+ENV NGINX_VERSION 1.14.2
 ENV NGX_BROTLI_COMMIT bfd2885b2da4d763fed18f49216bb935223cd34b 
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
@@ -86,7 +86,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& export GNUPGHOME="$(mktemp -d)" \
 	&& gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys "$GPG_KEYS" \
 	&& gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
-	&& rm -r "$GNUPGHOME" nginx.tar.gz.asc \
+	&& rm -rf "$GNUPGHOME" nginx.tar.gz.asc \
 	&& mkdir -p /usr/src \
 	&& tar -zxC /usr/src -f nginx.tar.gz \
 	&& rm nginx.tar.gz \
