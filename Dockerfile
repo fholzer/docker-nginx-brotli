@@ -3,7 +3,7 @@ FROM alpine:3.8
 LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
 
 ENV NGINX_VERSION 1.15.8
-ENV NGX_BROTLI_COMMIT bfd2885b2da4d763fed18f49216bb935223cd34b 
+ENV NGX_BROTLI_COMMIT 8104036af9cff4b1d34f22d00ba857e2a93a243c 
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& CONFIG="\
@@ -49,7 +49,6 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		--with-http_v2_module \
 		--with-ipv6 \
 		--add-module=/usr/src/ngx_brotli \
-                --with-cc-opt=-Wno-error \
 	" \
 	&& addgroup -S nginx \
 	&& adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
@@ -76,7 +75,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		cmake \
 	&& mkdir -p /usr/src \
 	&& cd /usr/src \
-	&& git clone --recursive https://github.com/google/ngx_brotli.git \
+	&& git clone --recursive https://github.com/eustas/ngx_brotli.git \
 	&& cd ngx_brotli \
 	&& git checkout -b $NGX_BROTLI_COMMIT $NGX_BROTLI_COMMIT \
 	&& cd .. \
