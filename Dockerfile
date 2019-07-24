@@ -1,9 +1,8 @@
-FROM alpine:3.9
+FROM alpine:3.10
 
 LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
 
-ENV NGINX_VERSION 1.16.0
-ENV NGX_BROTLI_COMMIT 8104036af9cff4b1d34f22d00ba857e2a93a243c 
+ENV NGINX_VERSION 1.17.2
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& CONFIG="\
@@ -79,11 +78,8 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& mkdir -p /usr/src \
 	&& cd /usr/src \
 	&& git clone --recursive https://github.com/eustas/ngx_brotli.git \
-	&& cd ngx_brotli \
-	&& git checkout -b $NGX_BROTLI_COMMIT $NGX_BROTLI_COMMIT \
-	&& cd .. \
 	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
-	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
+	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc -o nginx.tar.gz.asc \
         && sha512sum nginx.tar.gz nginx.tar.gz.asc \
 	&& export GNUPGHOME="$(mktemp -d)" \
 	&& gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys "$GPG_KEYS" \
