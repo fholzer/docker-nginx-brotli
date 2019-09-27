@@ -3,7 +3,7 @@ FROM alpine:3.10
 LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
 
 ENV NGINX_VERSION 1.16.1
-ENV NGX_BROTLI_COMMIT 8104036af9cff4b1d34f22d00ba857e2a93a243c 
+ENV NGX_BROTLI_COMMIT e505dce68acc190cc5a1e780a3b0275e39f160ca 
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& CONFIG="\
@@ -78,7 +78,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		cmake \
 	&& mkdir -p /usr/src \
 	&& cd /usr/src \
-	&& git clone --recursive https://github.com/eustas/ngx_brotli.git \
+	&& git clone --recursive https://github.com/google/ngx_brotli.git \
 	&& cd ngx_brotli \
 	&& git checkout -b $NGX_BROTLI_COMMIT $NGX_BROTLI_COMMIT \
 	&& cd .. \
