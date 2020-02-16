@@ -1,9 +1,9 @@
-FROM alpine:3.9
+FROM alpine:3.10
 
-MAINTAINER NGINX Docker Maintainers "docker-maint@nginx.com"
+LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
 
-ENV NGINX_VERSION 1.14.2
-ENV NGX_BROTLI_COMMIT 8104036af9cff4b1d34f22d00ba857e2a93a243c 
+ENV NGINX_VERSION 1.16.1
+ENV NGX_BROTLI_COMMIT e505dce68acc190cc5a1e780a3b0275e39f160ca 
 ENV NGX_DEVEL_KIT_COMMIT a22dade76c838e5f377d58d007f65d35b5ce1df3
 ENV NGX_SET_MISC_COMMIT aac9afe4c42d96e35d496994c552839799010255
 
@@ -44,12 +44,15 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		--with-threads \
 		--with-stream \
 		--with-stream_ssl_module \
+		--with-stream_ssl_preread_module \
+		--with-stream_realip_module \
+		--with-stream_geoip_module=dynamic \
 		--with-http_slice_module \
 		--with-mail \
 		--with-mail_ssl_module \
+		--with-compat \
 		--with-file-aio \
 		--with-http_v2_module \
-		--with-ipv6 \
 		--add-module=/usr/src/ngx_brotli \
 		--add-module=/usr/src/ngx_devel_kit \
 		--add-module=/usr/src/set-misc-nginx-module \
@@ -80,7 +83,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		cmake \
 	&& mkdir -p /usr/src \
 	&& cd /usr/src \
-	&& git clone --recursive https://github.com/eustas/ngx_brotli.git \
+	&& git clone --recursive https://github.com/google/ngx_brotli.git \
 	&& cd ngx_brotli \
 	&& git checkout -b $NGX_BROTLI_COMMIT $NGX_BROTLI_COMMIT \
 	&& cd .. \
@@ -110,6 +113,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& mv objs/ngx_http_image_filter_module.so objs/ngx_http_image_filter_module-debug.so \
 	&& mv objs/ngx_http_geoip_module.so objs/ngx_http_geoip_module-debug.so \
 	&& mv objs/ngx_http_perl_module.so objs/ngx_http_perl_module-debug.so \
+	&& mv objs/ngx_stream_geoip_module.so objs/ngx_stream_geoip_module-debug.so \
 	&& ./configure $CONFIG \
 	&& make -j$(getconf _NPROCESSORS_ONLN) \
 	&& make install \
@@ -123,6 +127,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& install -m755 objs/ngx_http_image_filter_module-debug.so /usr/lib/nginx/modules/ngx_http_image_filter_module-debug.so \
 	&& install -m755 objs/ngx_http_geoip_module-debug.so /usr/lib/nginx/modules/ngx_http_geoip_module-debug.so \
 	&& install -m755 objs/ngx_http_perl_module-debug.so /usr/lib/nginx/modules/ngx_http_perl_module-debug.so \
+	&& install -m755 objs/ngx_stream_geoip_module-debug.so /usr/lib/nginx/modules/ngx_stream_geoip_module-debug.so \
 	&& ln -s ../../usr/lib/nginx/modules /etc/nginx/modules \
 	&& strip /usr/sbin/nginx* \
 	&& strip /usr/lib/nginx/modules/*.so \
@@ -143,7 +148,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 			| xargs -r apk info --installed \
 			| sort -u \
 	)" \
-	&& apk add --no-cache --virtual .nginx-rundeps $runDeps \
+	&& apk add --no-cache --virtual .nginx-rundeps tzdata $runDeps \
 	&& apk del .build-deps \
 	&& apk del .brotli-build-deps \
 	&& apk del .gettext \
@@ -157,5 +162,7 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80 443
+
+STOPSIGNAL SIGTERM
 
 CMD ["nginx", "-g", "daemon off;"]
