@@ -144,7 +144,7 @@ COPY --from=0 /etc/nginx /etc/nginx
 COPY --from=0 /usr/lib/nginx/modules/*.so /usr/lib/nginx/modules/
 COPY --from=0 /usr/sbin/nginx /usr/sbin/nginx-debug /usr/sbin/
 COPY --from=0 /usr/share/nginx/html/* /usr/share/nginx/html/
-COPY --from=0 /usr/local/lib/perl5/site_perl /usr/local/lib/perl5/
+COPY --from=0 /usr/local/lib/perl5/site_perl /usr/local/lib/perl5/site_perl
 COPY --from=0 /usr/bin/envsubst /usr/local/bin/envsubst
 
 RUN \
