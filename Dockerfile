@@ -1,12 +1,7 @@
-FROM alpine:3.8
-
-LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
-
-ENV NGINX_VERSION 1.15.8
-ENV NGX_BROTLI_COMMIT 8104036af9cff4b1d34f22d00ba857e2a93a243c 
-
-RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
-	&& CONFIG="\
+ARG NGINX_VERSION=1.19.1
+ARG NGX_BROTLI_COMMIT=25f86f0bac1101b6512135eac5f93c49c63609e3
+ARG GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8
+ARG CONFIG="\
 		--prefix=/etc/nginx \
 		--sbin-path=/usr/sbin/nginx \
 		--modules-path=/usr/lib/nginx/modules \
@@ -42,17 +37,28 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		--with-threads \
 		--with-stream \
 		--with-stream_ssl_module \
+		--with-stream_ssl_preread_module \
+		--with-stream_realip_module \
+		--with-stream_geoip_module=dynamic \
 		--with-http_slice_module \
 		--with-mail \
 		--with-mail_ssl_module \
+		--with-compat \
 		--with-file-aio \
 		--with-http_v2_module \
-		--with-ipv6 \
 		--add-module=/usr/src/ngx_brotli \
-	" \
-	&& addgroup -S nginx \
-	&& adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
-	&& apk add --no-cache --virtual .build-deps \
+	"
+
+FROM alpine:3.12
+LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
+
+ARG NGINX_VERSION
+ARG NGX_BROTLI_COMMIT
+ARG GPG_KEYS
+ARG CONFIG
+
+RUN \
+	apk add --no-cache --virtual .build-deps \
 		gcc \
 		libc-dev \
 		make \
@@ -72,23 +78,28 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		automake \
 		git \
 		g++ \
-		cmake \
-	&& mkdir -p /usr/src \
-	&& cd /usr/src \
-	&& git clone --recursive https://github.com/eustas/ngx_brotli.git \
-	&& cd ngx_brotli \
-	&& git checkout -b $NGX_BROTLI_COMMIT $NGX_BROTLI_COMMIT \
+		cmake
+
+RUN \
+	mkdir -p /usr/src/ngx_brotli \
+	&& cd /usr/src/ngx_brotli \
+	&& git init \
+	&& git remote add origin https://github.com/google/ngx_brotli.git \
+	&& git fetch --depth 1 origin $NGX_BROTLI_COMMIT \
+	&& git checkout --recurse-submodules -q FETCH_HEAD \
+	&& git submodule update --init --depth 1 \
 	&& cd .. \
-	&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
-	&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
+	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
+	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
+        && sha512sum nginx.tar.gz nginx.tar.gz.asc \
 	&& export GNUPGHOME="$(mktemp -d)" \
 	&& gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys "$GPG_KEYS" \
 	&& gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
-	&& ( rm -rf "$GNUPGHOME" nginx.tar.gz.asc || true ) \
 	&& mkdir -p /usr/src \
-	&& tar -zxC /usr/src -f nginx.tar.gz \
-	&& rm nginx.tar.gz \
-	&& cd /usr/src/nginx-$NGINX_VERSION \
+	&& tar -zxC /usr/src -f nginx.tar.gz
+
+RUN \
+	cd /usr/src/nginx-$NGINX_VERSION \
 	&& ./configure $CONFIG --with-debug \
 	&& make -j$(getconf _NPROCESSORS_ONLN) \
 	&& mv objs/nginx objs/nginx-debug \
@@ -96,8 +107,12 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& mv objs/ngx_http_image_filter_module.so objs/ngx_http_image_filter_module-debug.so \
 	&& mv objs/ngx_http_geoip_module.so objs/ngx_http_geoip_module-debug.so \
 	&& mv objs/ngx_http_perl_module.so objs/ngx_http_perl_module-debug.so \
+	&& mv objs/ngx_stream_geoip_module.so objs/ngx_stream_geoip_module-debug.so \
 	&& ./configure $CONFIG \
-	&& make -j$(getconf _NPROCESSORS_ONLN) \
+	&& make -j$(getconf _NPROCESSORS_ONLN)
+
+RUN \
+	cd /usr/src/nginx-$NGINX_VERSION \
 	&& make install \
 	&& rm -rf /etc/nginx/html/ \
 	&& mkdir /etc/nginx/conf.d/ \
@@ -109,33 +124,38 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& install -m755 objs/ngx_http_image_filter_module-debug.so /usr/lib/nginx/modules/ngx_http_image_filter_module-debug.so \
 	&& install -m755 objs/ngx_http_geoip_module-debug.so /usr/lib/nginx/modules/ngx_http_geoip_module-debug.so \
 	&& install -m755 objs/ngx_http_perl_module-debug.so /usr/lib/nginx/modules/ngx_http_perl_module-debug.so \
-	&& ln -s ../../usr/lib/nginx/modules /etc/nginx/modules \
+	&& install -m755 objs/ngx_stream_geoip_module-debug.so /usr/lib/nginx/modules/ngx_stream_geoip_module-debug.so \
 	&& strip /usr/sbin/nginx* \
 	&& strip /usr/lib/nginx/modules/*.so \
-	&& rm -rf /usr/src/nginx-$NGINX_VERSION \
-	&& rm -rf /usr/src/ngx_brotli \
 	\
-	# Bring in gettext so we can get `envsubst`, then throw
-	# the rest away. To do this, we need to install `gettext`
-	# then move `envsubst` out of the way so `gettext` can
-	# be deleted completely, then move `envsubst` back.
 	&& apk add --no-cache --virtual .gettext gettext \
-	&& mv /usr/bin/envsubst /tmp/ \
 	\
-	&& runDeps="$( \
-		scanelf --needed --nobanner /usr/sbin/nginx /usr/lib/nginx/modules/*.so /tmp/envsubst \
+	&& scanelf --needed --nobanner /usr/sbin/nginx /usr/lib/nginx/modules/*.so \
 			| awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
 			| sort -u \
 			| xargs -r apk info --installed \
-			| sort -u \
-	)" \
-	&& apk add --no-cache --virtual .nginx-rundeps $runDeps \
-	&& apk del .build-deps \
-	&& apk del .brotli-build-deps \
-	&& apk del .gettext \
-	&& mv /tmp/envsubst /usr/local/bin/ \
-	\
+			| sort -u > /tmp/runDeps.txt
+
+FROM alpine:3.12
+ARG NGINX_VERSION
+
+COPY --from=0 /tmp/runDeps.txt /tmp/runDeps.txt
+COPY --from=0 /etc/nginx /etc/nginx
+COPY --from=0 /usr/lib/nginx/modules/*.so /usr/lib/nginx/modules/
+COPY --from=0 /usr/sbin/nginx /usr/sbin/nginx-debug /usr/sbin/
+COPY --from=0 /usr/share/nginx/html/* /usr/share/nginx/html/
+COPY --from=0 /usr/local/lib/perl5/site_perl /usr/local/lib/perl5/site_perl
+COPY --from=0 /usr/bin/envsubst /usr/local/bin/envsubst
+
+RUN \
+	addgroup -S nginx \
+	&& adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
+	&& apk add --no-cache --virtual .nginx-rundeps tzdata $(cat /tmp/runDeps.txt) \
+	&& rm /tmp/runDeps.txt \
+	&& ln -s /usr/lib/nginx/modules /etc/nginx/modules \
 	# forward request and error logs to docker log collector
+	&& mkdir /var/log/nginx \
+	&& touch /var/log/nginx/access.log /var/log/nginx/error.log \
 	&& ln -sf /dev/stdout /var/log/nginx/access.log \
 	&& ln -sf /dev/stderr /var/log/nginx/error.log
 
@@ -143,5 +163,7 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80 443
+
+STOPSIGNAL SIGTERM
 
 CMD ["nginx", "-g", "daemon off;"]
