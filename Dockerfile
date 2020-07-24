@@ -1,6 +1,5 @@
 ARG NGINX_VERSION=1.18.0
 ARG NGX_BROTLI_COMMIT=25f86f0bac1101b6512135eac5f93c49c63609e3
-ARG GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8
 ARG CONFIG="\
 		--prefix=/etc/nginx \
 		--sbin-path=/usr/sbin/nginx \
@@ -53,7 +52,6 @@ LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
 
 ARG NGINX_VERSION
 ARG NGX_BROTLI_COMMIT
-ARG GPG_KEYS
 ARG CONFIG
 
 RUN \
@@ -78,6 +76,8 @@ RUN \
 		g++ \
 		cmake
 
+COPY nginx.pub /tmp/nginx.pub
+
 RUN \
 	mkdir -p /usr/src/ngx_brotli \
 	&& cd /usr/src/ngx_brotli \
@@ -91,7 +91,7 @@ RUN \
 	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
         && sha512sum nginx.tar.gz nginx.tar.gz.asc \
 	&& export GNUPGHOME="$(mktemp -d)" \
-	&& gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys "$GPG_KEYS" \
+	&& gpg --import /tmp/nginx.pub \
 	&& gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
 	&& mkdir -p /usr/src \
 	&& tar -zxC /usr/src -f nginx.tar.gz
