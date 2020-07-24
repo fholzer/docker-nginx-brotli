@@ -130,7 +130,7 @@ RUN \
 	\
 	&& apk add --no-cache --virtual .gettext gettext \
 	\
-	&& scanelf --needed --nobanner /usr/sbin/nginx /usr/lib/nginx/modules/*.so \
+	&& scanelf --needed --nobanner /usr/sbin/nginx /usr/lib/nginx/modules/*.so /usr/bin/envsubst \
 			| awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
 			| sort -u \
 			| xargs -r apk info --installed \
