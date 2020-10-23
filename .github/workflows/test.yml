@@ -1,0 +1,21 @@
+name: Test
+
+on: [push,pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Before install
+        run:  |
+          echo '{"ipv6":true,"fixed-cidr-v6":"2001:db8:1::/64"}' | sudo tee /etc/docker/daemon.json
+          sudo service docker restart
+      - uses: actions/checkout@v2
+      - name: Install
+        run:  |
+          docker build -t nginx-brotli .
+      - uses: actions/checkout@v2
+      - name: Test
+        run:  |
+          sh runTests.sh
