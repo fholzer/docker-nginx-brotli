@@ -1,5 +1,6 @@
-ARG NGINX_VERSION=1.18.0
-ARG NGX_BROTLI_COMMIT=25f86f0bac1101b6512135eac5f93c49c63609e3
+ARG NGINX_VERSION=1.19.7
+ARG MAXMIND_VERSION=1.5.2
+ARG NGX_BROTLI_COMMIT=9aec15e2aa6feea2113119ba06460af70ab3ea62
 ARG CONFIG="\
 		--prefix=/etc/nginx \
 		--sbin-path=/usr/sbin/nginx \
@@ -45,14 +46,32 @@ ARG CONFIG="\
 		--with-file-aio \
 		--with-http_v2_module \
 		--add-module=/usr/src/ngx_brotli \
+		--add-dynamic-module=/ngx_http_geoip2_module \
+		--add-dynamic-module=/ngx_http_ipdb_module \
 	"
 
-FROM alpine:3.12
+FROM alpine:latest
 LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
 
 ARG NGINX_VERSION
 ARG NGX_BROTLI_COMMIT
 ARG CONFIG
+ARG MAXMIND_VERSION
+
+RUN set -x \
+  && apk add --no-cache --virtual .build-deps \
+    alpine-sdk \
+    perl \
+  && git clone https://github.com/leev/ngx_http_geoip2_module /ngx_http_geoip2_module \
+  && wget https://github.com/maxmind/libmaxminddb/releases/download/${MAXMIND_VERSION}/libmaxminddb-${MAXMIND_VERSION}.tar.gz \
+  && tar xf libmaxminddb-${MAXMIND_VERSION}.tar.gz \
+  && cd libmaxminddb-${MAXMIND_VERSION} \
+  && ./configure \
+  && make \
+  && make check \
+  && make install \
+  && apk del .build-deps \
+  && ldconfig || :
 
 RUN \
 	apk add --no-cache --virtual .build-deps \
@@ -68,6 +87,9 @@ RUN \
 		libxslt-dev \
 		gd-dev \
 		geoip-dev \
+		libmaxminddb \
+		libmaxminddb-dev \
+		json-c-dev \
 	&& apk add --no-cache --virtual .brotli-build-deps \
 		autoconf \
 		libtool \
@@ -94,6 +116,7 @@ RUN \
 	&& gpg --import /tmp/nginx.pub \
 	&& gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
 	&& mkdir -p /usr/src \
+	&& git clone https://github.com/peytonyip/ngx_http_ipdb_module.git /ngx_http_ipdb_module \
 	&& tar -zxC /usr/src -f nginx.tar.gz
 
 RUN \
@@ -132,7 +155,7 @@ RUN \
 			| xargs -r apk info --installed \
 			| sort -u > /tmp/runDeps.txt
 
-FROM alpine:3.12
+FROM alpine:latest
 ARG NGINX_VERSION
 
 COPY --from=0 /tmp/runDeps.txt /tmp/runDeps.txt
