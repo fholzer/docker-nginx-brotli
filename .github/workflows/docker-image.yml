@@ -14,9 +14,9 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v2
+
       # 获得 Nginx 版本号
       - name: Set Version
         id: set-version
@@ -24,14 +24,14 @@ jobs:
           echo "::set-output name=version::$(head -n 1 Dockerfile |awk -F '[=]'  '{print $2}')"
           echo "Nginx=$(head -n 1 Dockerfile |awk -F '[=]'  '{print $2}')" 
           echo "::set-output name=status::success"
-      -
-        name: Login to DockerHub
+          
+      - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
+
+      - name: Build and push
         uses: docker/build-push-action@v2
         with:
           context: .
