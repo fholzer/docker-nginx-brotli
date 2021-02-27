@@ -9,6 +9,7 @@ on:
     branches: [ master ]
     paths:
     - 'http3/Dockerfile'
+  workflow_dispatch:
 
 jobs:
   docker:
