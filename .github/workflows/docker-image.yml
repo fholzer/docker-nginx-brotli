@@ -13,6 +13,13 @@ jobs:
       -
         name: Checkout
         uses: actions/checkout@v2
+      # 获得 Nginx 版本号
+      - name: Set Version
+        id: set-version
+        run: |
+          echo "::set-output name=version::$(head -n 1 Dockerfile |awk -F '[=]'  '{print $2}')"
+          echo "Nginx=$(head -n 1 Dockerfile |awk -F '[=]'  '{print $2}')" 
+          echo "::set-output name=status::success"
       -
         name: Login to DockerHub
         uses: docker/login-action@v1
@@ -24,6 +31,8 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          push: true
-          tags: peytonyip/nginx-brotli:testworkflow
+          push: false
+          tags: |
+            peytonyip/nginx-brotli:latest
+            peytonyip/nginx-brotli:${{ steps.set-version.outputs.version }}
 
