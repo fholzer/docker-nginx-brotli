@@ -3,7 +3,7 @@ ARG MAXMIND_VERSION=1.5.2
 ARG NGX_BROTLI_COMMIT=9aec15e2aa6feea2113119ba06460af70ab3ea62
 ARG PCRE_VERSION=8.44
 ARG ZLIB_VERSION=1.2.11
-ARG QUICHE_VERSION=0.7.0
+#ARG QUICHE_VERSION=0.7.0
 ARG CONFIG="\
 		--prefix=/etc/nginx \
 		--sbin-path=/usr/sbin/nginx \
@@ -73,7 +73,7 @@ ARG CONFIG
 ARG MAXMIND_VERSION
 ARG PCRE_VERSION
 ARG ZLIB_VERSION
-ARG QUICHE_VERSION
+#ARG QUICHE_VERSION
 
 RUN set -x \
   && apk add --no-cache --virtual .build-deps \
@@ -138,7 +138,7 @@ RUN \
   	&& git clone --depth=1 --recursive https://github.com/openresty/headers-more-nginx-module \
   	&& git clone --depth=1 --recursive https://github.com/nginx/njs \
   	&& git clone --depth=1 --recursive https://github.com/AirisX/nginx_cookie_flag_module \
-  	&& git clone --depth=1 --recursive --branch ${QUICHE_VERSION} https://github.com/cloudflare/quiche \
+  	&& git clone --depth=1 --recursive --branch quiche-nginx-1.19.7 https://github.com/marinelli/quiche \
 	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
 	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
         && sha512sum nginx.tar.gz nginx.tar.gz.asc \
@@ -151,7 +151,7 @@ RUN \
 
 RUN \
 	cd /usr/src/nginx-$NGINX_VERSION \
-	&& patch -p01 < /usr/src/quiche/extras/nginx/nginx-1.16.patch \
+	&& patch -p01 < /usr/src/quiche/extras/nginx/nginx-1.19.7.patch \
 	&& ./configure $CONFIG --with-debug --build="pcre-${PCRE_VERSION} zlib-${ZLIB_VERSION} quiche-$(git --git-dir=/usr/src/quiche/.git rev-parse --short HEAD) headers-more-nginx-module-$(git --git-dir=/usr/src/headers-more-nginx-module/.git rev-parse --short HEAD) njs-$(git --git-dir=/usr/src/njs/.git rev-parse --short HEAD) nginx_cookie_flag_module-$(git --git-dir=/usr/src/nginx_cookie_flag_module/.git rev-parse --short HEAD)" \
 	&& make -j$(getconf _NPROCESSORS_ONLN) \
 	&& mv objs/nginx objs/nginx-debug \
