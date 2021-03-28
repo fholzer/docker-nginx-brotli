@@ -1,6 +1,6 @@
 ARG NGINX_VERSION=1.19.8
 ARG MAXMIND_VERSION=1.5.2
-ARG NGX_BROTLI_COMMIT=9aec15e2aa6feea2113119ba06460af70ab3ea62
+ARG NGX_BROTLI_COMMIT=49f0329110a1d93a5febc2bceceedc655d995420
 ARG CONFIG="\
 		--prefix=/etc/nginx \
 		--sbin-path=/usr/sbin/nginx \
