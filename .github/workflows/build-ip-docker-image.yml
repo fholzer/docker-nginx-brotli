@@ -25,7 +25,7 @@ jobs:
         uses: mudlabs/simple-diff@v1.2.0
         with:
           path: ip/ip2location/Dockerfile 
-        if: steps.diff.outputs.removed == true
+        
 
       - name: Build and push ip2location
         if: steps.diff.outputs.modified == true
@@ -40,7 +40,7 @@ jobs:
         uses: mudlabs/simple-diff@v1.2.0
         with:
           path: ip/ipregion/Dockerfile 
-        if: steps.diff.outputs.removed == true
+
 
       - name: Build and push ip2location
         if: steps.diff.outputs.modified == true
