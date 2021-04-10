@@ -38,6 +38,9 @@ ARG NGINX_VERSION=1.19.9
 
 ARG ALPINE_URL=dl-cdn.alpinelinux.org
 
+ARG MAXMIND_VERSION=1.5.2
+#ARG NGX_BROTLI_COMMIT=9aec15e2aa6feea2113119ba06460af70ab3ea62
+
 RUN --mount=type=bind,from=boringssl-builder,source=/usr/src/boringssl,target=/usr/src/boringssl \
   set -x \
      && sed -i "s/dl-cdn.alpinelinux.org/${ALPINE_URL}/g" /etc/apk/repositories \
@@ -89,6 +92,9 @@ RUN --mount=type=bind,from=boringssl-builder,source=/usr/src/boringssl,target=/u
     --with-http_v3_module \
     --with-http_quic_module \
     --with-stream_quic_module \
+    --add-module=/tmp/ngx_brotli \
+    --add-dynamic-module=/tmp/ngx_http_geoip2_module \
+		--add-dynamic-module=/tmp/ngx_http_ipdb_module \
   " \
   && addgroup -S nginx \
   && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
@@ -106,25 +112,35 @@ RUN --mount=type=bind,from=boringssl-builder,source=/usr/src/boringssl,target=/u
     gd-dev \
     geoip-dev \
     perl-dev \
+    alpine-sdk \
+    libmaxminddb-dev \
+		json-c-dev \
+  && apk add --no-cache --virtual .brotli-build-deps \
+		autoconf \
+		libtool \
+		automake \
+		git \
+		g++ \
+		cmake \
+  && cd /tmp \
+  && git clone https://github.com/leev/ngx_http_geoip2_module.git \
+  && git clone https://github.com/peytonyip/ngx_http_ipdb_module.git \
+  && git clone https://github.com/google/ngx_brotli.git \
+  && wget https://github.com/maxmind/libmaxminddb/releases/download/${MAXMIND_VERSION}/libmaxminddb-${MAXMIND_VERSION}.tar.gz \
+  && tar xf libmaxminddb-${MAXMIND_VERSION}.tar.gz \
+  && cd libmaxminddb-${MAXMIND_VERSION} \
+  && ./configure \
+  && make \
+  && make check \
+  && make install \
+  && ldconfig || : \
+  && cd /tmp \
+  && cd ngx_brotli \
+  && git submodule update --init \
+  && cd /tmp \
   && curl -fSL https://hg.nginx.org/nginx-quic/archive/quic.tar.gz -o nginx.tar.gz \
-  # && curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc -o nginx.tar.gz.asc \
-  # && export GNUPGHOME="$(mktemp -d)" \
-  # && found=''; \
-  # for server in \
-  #   ha.pool.sks-keyservers.net \
-  #   hkp://keyserver.ubuntu.com:80 \
-  #   hkp://p80.pool.sks-keyservers.net:80 \
-  #   pgp.mit.edu \
-  # ; do \
-  #   echo "Fetching GPG key $GPG_KEYS from $server"; \
-  #   gpg --keyserver "$server" --keyserver-options timeout=10 --recv-keys "$GPG_KEYS" && found=yes && break; \
-  # done; \
-  # test -z "$found" && echo >&2 "error: failed to fetch GPG key $GPG_KEYS" && exit 1; \
-  # gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
-  # && rm -rf "$GNUPGHOME" nginx.tar.gz.asc \
   && mkdir -p /usr/src \
   && tar -zxC /usr/src -f nginx.tar.gz \
-  # && tar -zxC /usr/src -f boringssl.tar.gz \
   && rm -rf nginx.tar.gz boringssl.tar.gz \
   && cd /usr/src/nginx-quic-quic \
   && ./auto/configure $CONFIG --with-debug \
@@ -168,8 +184,13 @@ RUN --mount=type=bind,from=boringssl-builder,source=/usr/src/boringssl,target=/u
   )" \
   && apk add --no-cache --virtual .nginx-rundeps $runDeps \
   && apk del --no-network .build-deps \
+  && apk del --no-network .brotli-build-deps \
   && apk del --no-network .gettext \
   && mv /tmp/envsubst /usr/local/bin/ \
+  && cd /tmp \
+  && rm -rf ngx_brotli \
+        ngx_http_geoip2_module \
+        ngx_http_ipdb_module \
   \
 # Bring in tzdata so users could set the timezones through the environment
 # variables
