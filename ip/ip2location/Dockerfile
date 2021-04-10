@@ -159,7 +159,7 @@ COPY --from=0 /usr/bin/envsubst /usr/local/bin/envsubst
 RUN \
 	addgroup -S nginx \
 	&& adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
-	apk add --no-cache --virtual .build-deps \
+	&& apk add --no-cache --virtual .build-deps \
 		autoconf \
 		libtool \
 		automake \
