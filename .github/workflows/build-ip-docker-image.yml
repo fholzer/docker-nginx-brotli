@@ -28,7 +28,7 @@ jobs:
         
 
       - name: Build and push ip2location
-        if: steps.diff.outputs.modified == true
+        if: steps.diff.outputs.modified == true steps.diff.outputs.added == true
         uses: docker/build-push-action@v2
         with:
           file: ./ip/ip2location/Dockerfile
@@ -43,7 +43,7 @@ jobs:
 
 
       - name: Build and push ip2location
-        if: steps.diff.outputs.modified == true
+        if: steps.diff.outputs.modified == true || steps.diff.outputs.added == true
         uses: docker/build-push-action@v2
         with:
           file: ./ip/ipregion/Dockerfile
