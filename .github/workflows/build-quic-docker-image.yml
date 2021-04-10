@@ -1,4 +1,4 @@
-name: Build HTTP3 Docker Image CI
+name: Build QUIC Docker Image CI
 
 on:
   push:
