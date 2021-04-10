@@ -166,6 +166,19 @@ RUN \
 		git \
 		g++ \
 		cmake \
+		gcc \
+		libc-dev \
+		make \
+		openssl-dev \
+		pcre-dev \
+		zlib-dev \
+		linux-headers \
+		curl \
+		gnupg1 \
+		libxslt-dev \
+		gd-dev \
+		geoip-dev \
+		perl \
 	&& git clone https://github.com/chrislim2888/IP2Location-C-Library.git /IP2Location-C-Library \
 	&& cd /IP2Location-C-Library \
 	&& autoreconf -i -v --force \
