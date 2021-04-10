@@ -159,6 +159,21 @@ COPY --from=0 /usr/bin/envsubst /usr/local/bin/envsubst
 RUN \
 	addgroup -S nginx \
 	&& adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
+	apk add --no-cache --virtual .build-deps \
+		autoconf \
+		libtool \
+		automake \
+		git \
+		g++ \
+		cmake \
+	&& git clone https://github.com/chrislim2888/IP2Location-C-Library.git /IP2Location-C-Library \
+	&& cd /IP2Location-C-Library \
+	&& autoreconf -i -v --force \
+	&& ./configure \
+	&& make \
+	&& make install \
+	&& apk del .build-deps \
+	&& rm -rf /IP2Location-C-Library \
 	&& apk add --no-cache --virtual .nginx-rundeps tzdata $(cat /tmp/runDeps.txt) \
 	&& rm /tmp/runDeps.txt \
 	&& ln -s /usr/lib/nginx/modules /etc/nginx/modules \
