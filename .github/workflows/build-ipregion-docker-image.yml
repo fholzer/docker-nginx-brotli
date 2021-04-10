@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     paths:
-    - 'ip/ipregion/Dockerfile'
+    - 'ip/ip2region/Dockerfile'
   workflow_dispatch:
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
       - name: Build and push ip2location
         uses: docker/build-push-action@v2
         with:
-          file: ./ip/ipregion/Dockerfile
+          file: ./ip/ip2region/Dockerfile
           context: .
           push: true
-          tags: peytonyip/nginx-brotli:ipregion
+          tags: peytonyip/nginx-brotli:ip2region
