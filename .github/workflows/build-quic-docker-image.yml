@@ -6,7 +6,7 @@ on:
     paths:
     - 'quic/Dockerfile'
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths:
     - 'quic/Dockerfile'
   workflow_dispatch:

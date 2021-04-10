@@ -2,11 +2,11 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
     paths:
     - 'Dockerfile'
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths:
     - 'Dockerfile'
   workflow_dispatch:

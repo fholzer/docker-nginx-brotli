@@ -2,11 +2,11 @@ name: Build HTTP3 Docker Image CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
     paths:
     - 'http3/Dockerfile'
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths:
     - 'http3/Dockerfile'
   workflow_dispatch:
