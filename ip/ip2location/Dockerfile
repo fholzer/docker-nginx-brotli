@@ -71,6 +71,7 @@ RUN \
 		libxslt-dev \
 		gd-dev \
 		geoip-dev \
+		perl \
 	&& apk add --no-cache --virtual .brotli-build-deps \
 		autoconf \
 		libtool \
@@ -96,6 +97,14 @@ RUN \
 	&& export GNUPGHOME="$(mktemp -d)" \
 	&& gpg --import /tmp/nginx.pub \
 	&& gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
+	&& git clone https://github.com/chrislim2888/IP2Location-C-Library.git /IP2Location-C-Library \
+	&& cd /IP2Location-C-Library \
+	&& autoreconf -i -v --force \
+	&& ./configure \
+	&& make \
+	&& make install \
+    && cd data \
+    && perl ip-country.pl \
 	&& mkdir -p /usr/src \
 	&& git clone https://github.com/ip2location/ip2location-nginx.git /ip2location-nginx \
 	&& tar -zxC /usr/src -f nginx.tar.gz
