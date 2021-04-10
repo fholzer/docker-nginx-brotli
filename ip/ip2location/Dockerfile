@@ -103,8 +103,8 @@ RUN \
 	&& ./configure \
 	&& make \
 	&& make install \
-    && cd data \
-    && perl ip-country.pl \
+    #&& cd data \
+    #&& perl ip-country.pl \
 	#&& mkdir -p /usr/src \
 	&& cd /usr/src \
 	&& git clone https://github.com/ip2location/ip2location-nginx.git /ip2location-nginx \
