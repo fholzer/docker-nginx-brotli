@@ -1,0 +1,33 @@
+name: Build HTTP3 Docker Image CI
+
+on:
+  push:
+    branches: [ test ]
+    paths:
+    - 'quic/Dockerfile'
+  pull_request:
+    branches: [ master ]
+    paths:
+    - 'quic/Dockerfile'
+  workflow_dispatch:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          file: ./quic/Dockerfile
+          context: .
+          push: true
+          tags: peytonyip/openresty-brotli:quic
