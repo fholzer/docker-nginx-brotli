@@ -1,4 +1,4 @@
-name: Build ipregion Docker Image CI
+name: Build ip2region Docker Image CI
 
 on:
   push:
