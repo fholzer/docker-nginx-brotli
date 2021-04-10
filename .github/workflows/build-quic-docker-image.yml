@@ -30,4 +30,4 @@ jobs:
           file: ./quic/Dockerfile
           context: .
           push: true
-          tags: peytonyip/openresty-brotli:quic
+          tags: peytonyip/nginx-brotli:quic
