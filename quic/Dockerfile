@@ -176,21 +176,22 @@ RUN --mount=type=bind,from=boringssl-builder,source=/usr/src/boringssl,target=/u
   && apk add --no-cache --virtual .gettext gettext \
   && mv /usr/bin/envsubst /tmp/ \
   \
-  && runDeps="$( \
-    scanelf --needed --nobanner --format '%n#p' /usr/sbin/nginx /usr/lib/nginx/modules/*.so /tmp/envsubst \
-      | tr ',' '\n' \
-      | sort -u \
-      | awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
-  )" \
-  && apk add --no-cache --virtual .nginx-rundeps $runDeps \
+  && scanelf --needed --nobanner /usr/sbin/nginx /usr/lib/nginx/modules/*.so /usr/bin/envsubst \
+			| awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
+			| sort -u \
+			| xargs -r apk info --installed \
+			| sort -u > /tmp/runDeps.txt \
   && apk del --no-network .build-deps \
   && apk del --no-network .brotli-build-deps \
   && apk del --no-network .gettext \
+  && apk add --no-cache --virtual .nginx-rundeps $(cat /tmp/runDeps.txt) \
   && mv /tmp/envsubst /usr/local/bin/ \
   && cd /tmp \
   && rm -rf ngx_brotli \
         ngx_http_geoip2_module \
         ngx_http_ipdb_module \
+        libmaxminddb-${MAXMIND_VERSION}.tar.gz \
+        libmaxminddb-${MAXMIND_VERSION} \
   \
 # Bring in tzdata so users could set the timezones through the environment
 # variables
