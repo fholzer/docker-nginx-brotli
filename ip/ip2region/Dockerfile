@@ -116,7 +116,7 @@ RUN \
 	&& gpg --import /tmp/nginx.pub \
 	&& gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
 	&& mkdir -p /usr/src \
-	&& git clone https://github.com/peytonyip/ngx-ip2region.git /ngx-ip2region \
+	&& git clone https://github.com/Cherisher/ngx-ip2region.git /ngx-ip2region \
 	&& tar -zxC /usr/src -f nginx.tar.gz
 
 RUN \
