@@ -47,7 +47,7 @@ ARG CONFIG="\
 		--with-http_v2_module \
 		--add-module=/usr/src/ngx_brotli \
 		--add-dynamic-module=/ngx_http_geoip2_module \
-		--add-dynamic-module=/ip2region/binding/nginx \
+		--add-dynamic-module=/ngx-ip2region \
 	"
 
 FROM alpine:latest
@@ -116,7 +116,7 @@ RUN \
 	&& gpg --import /tmp/nginx.pub \
 	&& gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
 	&& mkdir -p /usr/src \
-	&& git clone https://github.com/lionsoul2014/ip2region.git /ip2region \
+	&& git clone https://github.com/peytonyip/ngx-ip2region.git /ngx-ip2region \
 	&& tar -zxC /usr/src -f nginx.tar.gz
 
 RUN \
