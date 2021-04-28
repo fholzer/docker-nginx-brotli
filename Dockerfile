@@ -1,4 +1,4 @@
-ARG NGINX_VERSION=1.19.10
+ARG NGINX_VERSION=1.20.0
 ARG MAXMIND_VERSION=1.5.2
 ARG NGX_BROTLI_COMMIT=9aec15e2aa6feea2113119ba06460af70ab3ea62
 ARG CONFIG="\
@@ -46,8 +46,8 @@ ARG CONFIG="\
 		--with-file-aio \
 		--with-http_v2_module \
 		--add-module=/usr/src/ngx_brotli \
-		--add-dynamic-module=/ngx_http_geoip2_module \
-		--add-dynamic-module=/ngx_http_ipdb_module \
+		--add-dynamic-module=/usr/src/ngx_http_geoip2_module \
+		--add-dynamic-module=/usr/src/ngx_http_ipdb_module \
 	"
 
 FROM alpine:latest
@@ -62,7 +62,7 @@ RUN set -x \
   && apk add --no-cache --virtual .build-deps \
     alpine-sdk \
     perl \
-  && git clone https://github.com/leev/ngx_http_geoip2_module /ngx_http_geoip2_module \
+  && git clone https://github.com/leev/ngx_http_geoip2_module /usr/src/ngx_http_geoip2_module \
   && wget https://github.com/maxmind/libmaxminddb/releases/download/${MAXMIND_VERSION}/libmaxminddb-${MAXMIND_VERSION}.tar.gz \
   && tar xf libmaxminddb-${MAXMIND_VERSION}.tar.gz \
   && cd libmaxminddb-${MAXMIND_VERSION} \
@@ -111,12 +111,12 @@ RUN \
 	&& cd .. \
 	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
 	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
-        && sha512sum nginx.tar.gz nginx.tar.gz.asc \
+    && sha512sum nginx.tar.gz nginx.tar.gz.asc \
 	&& export GNUPGHOME="$(mktemp -d)" \
 	&& gpg --import /tmp/nginx.pub \
 	&& gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
 	&& mkdir -p /usr/src \
-	&& git clone https://github.com/peytonyip/ngx_http_ipdb_module.git /ngx_http_ipdb_module \
+	&& git clone https://github.com/peytonyip/ngx_http_ipdb_module.git /usr/src/ngx_http_ipdb_module \
 	&& tar -zxC /usr/src -f nginx.tar.gz
 
 RUN \
