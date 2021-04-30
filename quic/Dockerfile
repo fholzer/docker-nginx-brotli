@@ -38,7 +38,7 @@ ARG NGINX_VERSION=1.19.10
 
 ARG ALPINE_URL=dl-cdn.alpinelinux.org
 
-ARG MAXMIND_VERSION=1.5.2
+ARG MAXMIND_VERSION=1.6.0
 #ARG NGX_BROTLI_COMMIT=9aec15e2aa6feea2113119ba06460af70ab3ea62
 
 RUN --mount=type=bind,from=boringssl-builder,source=/usr/src/boringssl,target=/usr/src/boringssl \
