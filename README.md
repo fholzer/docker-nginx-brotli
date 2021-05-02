@@ -182,6 +182,8 @@ free ip database download links:
 
 [ip2location](https://lite.ip2location.com/)
 
+[ip2region](https://github.com/lionsoul2014/ip2region/tree/master/data)
+
 # Thanks for:
 [RanadeepPolavarapu/docker-nginx-http3](https://github.com/RanadeepPolavarapu/docker-nginx-http3)
 
