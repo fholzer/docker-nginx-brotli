@@ -11,14 +11,15 @@ the quic is test for latest [nginx-quic](https://hg.nginx.org/nginx-quic/) + bro
 
 the ip2location is  latest nginx + brotli + [ip2location-nginx](https://github.com/ip2location/ip2location-nginx) + ngx_http_ipdb_module
 
-the ip2region is  latest nginx + brotli + [ngx-ip2region](https://github.com/Cherisher/ngx-ip2region) + ngx_http_geoip2_module
+the ip2region is  latest nginx + brotli + [ngx_http_ip2region-module](https://github.com/liangwenrong/ngx_http_ip2region-module) + ngx_http_geoip2_module
 
+lite is only nginx + brotli
 
 
 # How to use this image
 Just official Nginx,there are some configtion example,You can also see the relevant configuration examples from the corresponding module project address.
 
-Simple configuration example:
+Simple configuration example(/etc/nginx/nginx.conf):
 
 ```nginx
 user nginx;
@@ -27,9 +28,11 @@ worker_processes  auto;
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
 
-# load dynamic-module
+# load dynamic-module,it depends on the tag you choose 
 load_module modules/ngx_http_geoip2_module.so;
 load_module modules/ngx_http_ipdb_module.so;
+load_module modules/ngx_http_ip2region_module.so;
+
 
 events {
   use epoll;
@@ -39,7 +42,20 @@ events {
 
 
 http {
-    ...
+    ......
+    log_format json_log escape=json '{'
+       
+         ```````
+        '"ipdb_country_name": "$ipdb_country_name",'
+        '"ipdb_city_name": "$ipdb_city_name",'
+        '"ip2region_country_name": "$ip2region_country_name",'
+        '"ip2region_city_name": "$ip2region_city_name",'
+        '"ip2region_isp_domain": "$ip2region_isp_domain",'
+        '"ip2region_province_name": "$ip2region_province_name",'
+        '"ip2region_city_id": "$ip2region_city_id",'
+        '"geoip2_data_country_code": "$geoip2_data_country_code",'
+        '"geoip2_data_city_name": "$geoip2_data_city_name"'
+        '}';
 
     # geoip2
     geoip2 /path/to/GeoLite2-Country.mmdb {
@@ -60,9 +76,12 @@ http {
     ipdb_proxy 127.0.0.1;
     ipdb_proxy_recursive on;
 
+    # ip2region
+    ip2region "/path/to/ip2region.db" "btree"; 
 
 
-    ...
+
+    .........
 
     # brotli
     brotli on;
@@ -156,10 +175,16 @@ http {
 
 
 free ip database download links:
+
 [GeoLite2](https://dev.maxmind.com/geoip/geoip2/geolite2/)
+
 [qqwry.ipdb](https://github.com/metowolf/qqwry.ipdb)
+
 [ip2location](https://lite.ip2location.com/)
 
-#Thanks for:
+# Thanks for:
 [RanadeepPolavarapu/docker-nginx-http3](https://github.com/RanadeepPolavarapu/docker-nginx-http3)
+
 [fholzer/docker-nginx-brotli](https://github.com/fholzer/docker-nginx-brotli)
+
+[marinelli/quiche](https://github.com/marinelli/quiche/tree/quiche-nginx-1.19.7)
