@@ -1,4 +1,4 @@
-ARG NGINX_VERSION=1.21.1
+ARG NGINX_VERSION=1.21.2
 ARG MAXMIND_VERSION=1.6.0
 ARG NGX_BROTLI_COMMIT=9aec15e2aa6feea2113119ba06460af70ab3ea62
 ARG PCRE_VERSION=8.44
@@ -142,7 +142,7 @@ RUN \
   	#&& git clone --depth=1 --recursive --branch quiche-nginx-1.19.7 https://github.com/marinelli/quiche \
 	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
 	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
-        && sha512sum nginx.tar.gz nginx.tar.gz.asc \
+    && sha512sum nginx.tar.gz nginx.tar.gz.asc \
 	&& export GNUPGHOME="$(mktemp -d)" \
 	&& gpg --import /tmp/nginx.pub \
 	&& gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \

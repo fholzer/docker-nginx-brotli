@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:experimental
-FROM alpine:3.13 as boringssl-builder
+FROM alpine:3.14 as boringssl-builder
 
 ARG ALPINE_URL=dl-cdn.alpinelinux.org
 
@@ -30,11 +30,11 @@ RUN set -x \
      && ls -la ../include \
      && apk del --no-network .build-deps
 
-FROM alpine:3.13
+FROM alpine:3.14
 
 LABEL maintainer="nginx With HTTP3"
 
-ARG NGINX_VERSION=1.21.1
+ARG NGINX_VERSION=1.21.2
 
 ARG ALPINE_URL=dl-cdn.alpinelinux.org
 
