@@ -1,4 +1,4 @@
-ARG NGINX_VERSION=1.21.2
+ARG NGINX_VERSION=1.21.3
 ARG MAXMIND_VERSION=1.6.0
 ARG NGX_BROTLI_COMMIT=9aec15e2aa6feea2113119ba06460af70ab3ea62
 ARG PCRE_VERSION=8.44
@@ -21,8 +21,8 @@ ARG CONFIG="\
 		--user=nginx \
 		--group=nginx \
 		--with-pcre=/usr/src/pcre-${PCRE_VERSION} \
-  		--with-pcre-jit \
-  		--with-zlib=/usr/src/zlib-${ZLIB_VERSION} \
+  	--with-pcre-jit \
+  	--with-zlib=/usr/src/zlib-${ZLIB_VERSION} \
 		--with-http_ssl_module \
 		--with-http_realip_module \
 		--with-http_addition_module \
@@ -53,12 +53,12 @@ ARG CONFIG="\
 		--with-file-aio \
 		--with-http_v2_module \
 		--with-http_v3_module \
-  		--with-openssl=/usr/src/quiche/deps/boringssl \
-  		--with-quiche=/usr/src/quiche \
+  	--with-openssl=/usr/src/quiche/deps/boringssl \
+  	--with-quiche=/usr/src/quiche \
 		--add-module=/usr/src/ngx_brotli \
 		--add-module=/usr/src/headers-more-nginx-module \
-  		--add-module=/usr/src/njs/nginx \
-  		--add-module=/usr/src/nginx_cookie_flag_module \
+  	--add-module=/usr/src/njs/nginx \
+  	--add-module=/usr/src/nginx_cookie_flag_module \
 		--add-dynamic-module=/usr/src/ngx_http_geoip2_module \
 		--add-dynamic-module=/usr/src/ngx_http_ipdb_module \
 		--with-cc-opt=-Wno-error \
@@ -134,15 +134,15 @@ RUN \
 	&& git submodule update --init --depth 1 \
 	&& cd .. \
 	&& wget -qO- https://ftp.pcre.org/pub/pcre/pcre-${PCRE_VERSION}.tar.gz | tar zxvf - \
-  	&& wget -qO- http://zlib.net/zlib-${ZLIB_VERSION}.tar.gz | tar zxvf - \
-  	&& git clone --depth=1 --recursive https://github.com/openresty/headers-more-nginx-module \
-  	&& git clone --depth=1 --recursive https://github.com/nginx/njs \
-  	&& git clone --depth=1 --recursive https://github.com/AirisX/nginx_cookie_flag_module \
+  && wget -qO- http://zlib.net/zlib-${ZLIB_VERSION}.tar.gz | tar zxvf - \
+  && git clone --depth=1 --recursive https://github.com/openresty/headers-more-nginx-module \
+  && git clone --depth=1 --recursive https://github.com/nginx/njs \
+  && git clone --depth=1 --recursive https://github.com/AirisX/nginx_cookie_flag_module \
 	&& git clone --depth=1 --recursive https://github.com/cloudflare/quiche \
   	#&& git clone --depth=1 --recursive --branch quiche-nginx-1.19.7 https://github.com/marinelli/quiche \
 	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
 	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
-    && sha512sum nginx.tar.gz nginx.tar.gz.asc \
+  && sha512sum nginx.tar.gz nginx.tar.gz.asc \
 	&& export GNUPGHOME="$(mktemp -d)" \
 	&& gpg --import /tmp/nginx.pub \
 	&& gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
