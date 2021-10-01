@@ -47,7 +47,7 @@ ARG CONFIG="\
 		--add-module=/usr/src/ngx_brotli \
 	"
 
-FROM alpine:3.12
+FROM alpine:3.13
 LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
 
 ARG NGINX_VERSION
