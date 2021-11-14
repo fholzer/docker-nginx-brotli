@@ -217,7 +217,7 @@ RUN \
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80 443
+EXPOSE 80/tcp 443/tcp 443/udp
 
 STOPSIGNAL SIGQUIT
 
