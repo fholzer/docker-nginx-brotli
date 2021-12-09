@@ -90,7 +90,6 @@ RUN --mount=type=bind,from=boringssl-builder,source=/usr/src/boringssl,target=/u
   --with-file-aio \
   --with-http_v2_module \
   --with-http_v3_module \
-  --with-http_quic_module \
   --with-stream_quic_module \
   --add-module=/tmp/ngx_brotli \
   --add-dynamic-module=/tmp/ngx_http_geoip2_module \
