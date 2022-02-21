@@ -1,0 +1,19 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+# Set default charset
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+
+[*.{yaml,yml,sh}]
+indent_style = space
+indent_size = 2
+
+[Dockerfile]
+indent_style = tab
+indent_size = 4
