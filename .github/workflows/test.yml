@@ -39,7 +39,7 @@ jobs:
           tags: ${{ env.IMAGE_NAME }}
           load: true
           cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
 
       - name: List images
         run: |
@@ -55,7 +55,7 @@ jobs:
           tags: ${{ env.IMAGE_NAME }}
           load: true
           cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
 
       # - name: Build images for other platforms
       #   uses: docker/build-push-action@v2
