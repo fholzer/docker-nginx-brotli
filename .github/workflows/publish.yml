@@ -44,7 +44,7 @@ jobs:
           push: false
           tags: ${{ steps.meta.outputs.tags }}
           load: true
-          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-from: type=gha
           cache-to: type=local,dest=/tmp/.buildx-cache
 
       - name: List images
@@ -72,4 +72,4 @@ jobs:
           push: true
           tags: ${{ env.IMAGE_NAME }}
           cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-to: type=gha,mode=max
