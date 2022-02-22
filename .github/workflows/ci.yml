@@ -6,8 +6,7 @@ on:
     branches-ignore:
       - master
       - mainline
-    tags-ignore:
-      - v*
+      - rb/*
 
 env:
   IMAGE_NAME: nginx-brotli
