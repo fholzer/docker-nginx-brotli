@@ -133,11 +133,7 @@ RUN \
 			| xargs -r apk info --installed \
 			| sort -u > /tmp/runDeps.txt
 
-<<<<<<< HEAD
-FROM alpine:3.12
-=======
 FROM alpine:$ALPINE_VERSION
->>>>>>> master
 ARG NGINX_VERSION
 
 COPY --from=0 /tmp/runDeps.txt /tmp/runDeps.txt
