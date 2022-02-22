@@ -1,0 +1,39 @@
+---
+name: CI
+
+on:
+  push:
+    branches-ignore:
+      - master
+      - mainline
+    tags-ignore:
+      - v*
+
+env:
+  IMAGE_NAME: nginx-brotli
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1.6.0
+
+      - name: Build amd64 image
+        uses: docker/build-push-action@v2.9.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          platforms: linux/amd64
+          push: false
+          tags: ${{ env.IMAGE_NAME }}
+          load: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
+      - name: Test
+        run: |
+          docker run --rm -v $(pwd)/tests.sh:/tests.sh --entrypoint sh nginx-brotli /tests.sh

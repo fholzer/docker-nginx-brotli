@@ -159,6 +159,7 @@ COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80 443
 
-STOPSIGNAL SIGTERM
+STOPSIGNAL SIGQUIT
 
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["nginx"]
+CMD ["-g", "daemon off;"]
