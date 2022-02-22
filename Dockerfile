@@ -1,3 +1,4 @@
+ARG ALPINE_VERSION=3.15
 ARG NGINX_VERSION=1.19.1
 ARG NGX_BROTLI_COMMIT=25f86f0bac1101b6512135eac5f93c49c63609e3
 ARG CONFIG="\
@@ -47,7 +48,7 @@ ARG CONFIG="\
 		--add-module=/usr/src/ngx_brotli \
 	"
 
-FROM alpine:3.12
+FROM alpine:$ALPINE_VERSION
 LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
 
 ARG NGINX_VERSION
@@ -132,7 +133,11 @@ RUN \
 			| xargs -r apk info --installed \
 			| sort -u > /tmp/runDeps.txt
 
+<<<<<<< HEAD
 FROM alpine:3.12
+=======
+FROM alpine:$ALPINE_VERSION
+>>>>>>> master
 ARG NGINX_VERSION
 
 COPY --from=0 /tmp/runDeps.txt /tmp/runDeps.txt
@@ -159,6 +164,7 @@ COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80 443
 
-STOPSIGNAL SIGTERM
+STOPSIGNAL SIGQUIT
 
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["nginx"]
+CMD ["-g", "daemon off;"]
