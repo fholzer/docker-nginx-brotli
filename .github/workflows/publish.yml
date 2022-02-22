@@ -10,7 +10,7 @@ on:
       - v*
 
 env:
-  IMAGE_NAME: nginx-brotli
+  IMAGE_NAME: fholzer/nginx-brotli
 
 jobs:
   build-test-and-publish:
