@@ -13,7 +13,7 @@ env:
   IMAGE_NAME: nginx-brotli
 
 jobs:
-  Build, Test and Publish:
+  build-test-and-publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
