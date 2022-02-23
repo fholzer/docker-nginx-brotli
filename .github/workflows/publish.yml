@@ -23,6 +23,8 @@ jobs:
         uses: docker/metadata-action@v3.6.2
         with:
           images: ${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
           tags: |
             type=raw,priority=1000,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
             type=raw,priority=1000,value=mainline-latest,enable=${{ github.ref == 'refs/heads/mainline' }}
@@ -45,7 +47,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           load: true
           cache-from: type=gha
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-to: type=gha,mode=max
 
       - name: List images
         run: |
@@ -70,6 +72,6 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64,linux/ppc64le
           push: true
-          tags: ${{ env.IMAGE_NAME }}
-          cache-from: type=local,src=/tmp/.buildx-cache
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
           cache-to: type=gha,mode=max
