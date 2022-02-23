@@ -21,10 +21,10 @@ jobs:
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3.6.2
-        flavor: |
-          latest=false
         with:
           images: ${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
           tags: |
             type=raw,priority=1000,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
             type=raw,priority=1000,value=mainline-latest,enable=${{ github.ref == 'refs/heads/mainline' }}
