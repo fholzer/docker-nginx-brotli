@@ -70,6 +70,6 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64,linux/ppc64le
           push: true
-          tags: ${{ env.IMAGE_NAME }}
+          tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
