@@ -21,6 +21,8 @@ jobs:
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3.6.2
+        flavor: |
+          latest=false
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
