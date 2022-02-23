@@ -45,7 +45,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           load: true
           cache-from: type=gha
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-to: type=gha,mode=max
 
       - name: List images
         run: |
@@ -71,5 +71,5 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/ppc64le
           push: true
           tags: ${{ env.IMAGE_NAME }}
-          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-from: type=gha
           cache-to: type=gha,mode=max
