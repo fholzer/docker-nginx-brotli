@@ -62,7 +62,7 @@ RUN \
 	gcc \
 	libc-dev \
 	make \
-	openssl-dev \
+	openssl3-dev \
 	pcre-dev \
 	zlib-dev \
 	linux-headers \
@@ -169,7 +169,7 @@ RUN \
 	gcc \
 	libc-dev \
 	make \
-	openssl-dev \
+	openssl3-dev \
 	pcre-dev \
 	zlib-dev \
 	linux-headers \
@@ -187,7 +187,7 @@ RUN \
 	&& make install \
 	&& apk del .build-deps \
 	&& rm -rf /IP2Location-C-Library \
-	&& apk add --no-cache --virtual .nginx-rundeps tzdata $(cat /tmp/runDeps.txt) \
+	&& apk add --no-cache --virtual .nginx-rundeps openssl3 tzdata $(cat /tmp/runDeps.txt) \
 	&& rm /tmp/runDeps.txt \
 	&& ln -s /usr/lib/nginx/modules /etc/nginx/modules \
 	# forward request and error logs to docker log collector
