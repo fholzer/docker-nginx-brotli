@@ -67,7 +67,7 @@ RUN \
 	zlib-dev \
 	linux-headers \
 	curl \
-	gnupg1 \
+	gnupg \
 	libxslt-dev \
 	gd-dev \
 	geoip-dev \
