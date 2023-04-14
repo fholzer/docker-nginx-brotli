@@ -1,4 +1,4 @@
-ARG ALPINE_VERSION=3.15
+ARG ALPINE_VERSION=3.17.3
 ARG NGINX_VERSION=1.20.2
 ARG NGX_BROTLI_COMMIT=9aec15e2aa6feea2113119ba06460af70ab3ea62
 ARG CONFIG="\
@@ -65,7 +65,7 @@ RUN \
 		zlib-dev \
 		linux-headers \
 		curl \
-		gnupg1 \
+		gnupg \
 		libxslt-dev \
 		gd-dev \
 		geoip-dev \
@@ -77,7 +77,7 @@ RUN \
 		g++ \
 		cmake
 
-COPY nginx.pub /tmp/nginx.pub
+COPY gpg/ /tmp/gpg
 
 RUN \
 	mkdir -p /usr/src/ngx_brotli \
@@ -92,7 +92,7 @@ RUN \
 	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
         && sha512sum nginx.tar.gz nginx.tar.gz.asc \
 	&& export GNUPGHOME="$(mktemp -d)" \
-	&& gpg --import /tmp/nginx.pub \
+	&& gpg --import /tmp/gpg/* \
 	&& gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
 	&& mkdir -p /usr/src \
 	&& tar -zxC /usr/src -f nginx.tar.gz
