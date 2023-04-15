@@ -71,6 +71,7 @@ RUN \
 		geoip-dev
 RUN \
 	 apk add --no-cache --virtual .brotli-build-deps \
+		tar \
 		autoconf \
 		libtool \
 		automake \
