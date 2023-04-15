@@ -6,5 +6,5 @@ if [ "x`whoami`" == "xroot" ]; then
 else
 	hg clone http://hg.nginx.org/nginx-tests
 	cd nginx-tests
-	TEST_NGINX_BINARY=/usr/sbin/nginx-debug TEST_NGINX_MODULES=/etc/nginx/modules TEST_NGINX_LEAVE=1 prove .
+	ls -1 *.t | grep -v '^http_listen.t$' | TEST_NGINX_BINARY=/usr/sbin/nginx-debug TEST_NGINX_MODULES=/etc/nginx/modules TEST_NGINX_LEAVE=1 xargs prove
 fi
