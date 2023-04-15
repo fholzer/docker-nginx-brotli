@@ -68,8 +68,9 @@ RUN \
 		gnupg \
 		libxslt-dev \
 		gd-dev \
-		geoip-dev \
-	&& apk add --no-cache --virtual .brotli-build-deps \
+		geoip-dev
+RUN \
+	 apk add --no-cache --virtual .brotli-build-deps \
 		autoconf \
 		libtool \
 		automake \
