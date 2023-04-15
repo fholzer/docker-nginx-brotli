@@ -76,7 +76,10 @@ RUN \
 		automake \
 		git \
 		g++ \
-		cmake
+		cmake \
+		bash
+
+SHELL ["/bin/bash", "-x", "-c"]
 
 COPY gpg/ /tmp/gpg
 
