@@ -31,7 +31,7 @@ jobs:
             type=match,priority=600,pattern=^(v\d+\.\d+\.\d+)$,group=0
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2.0.0
+        uses: docker/setup-qemu-action@v2.1.0
 
       - name: Set up Docker Buildx
         id: buildx
