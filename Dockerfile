@@ -46,6 +46,7 @@ ARG CONFIG="\
 		--with-file-aio \
 		--with-http_v2_module \
 		--add-module=/usr/src/ngx_brotli \
+		--add-module=/usr/src/ngx_http_geoip2_module \
 	"
 
 FROM alpine:$ALPINE_VERSION
@@ -68,7 +69,9 @@ RUN \
 		gnupg \
 		libxslt-dev \
 		gd-dev \
-		geoip-dev
+		geoip-dev \
+		libmaxminddb-dev  # Added for GeoIP2
+
 RUN \
 	 apk add --no-cache --virtual .brotli-build-deps \
 		tar \
@@ -101,6 +104,9 @@ RUN \
 	&& gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
 	&& mkdir -p /usr/src \
 	&& tar -zxC /usr/src -f nginx.tar.gz
+
+RUN cd /usr/src/ && git clone https://github.com/leev/ngx_http_geoip2_module.git
+
 
 RUN \
 	cd /usr/src/nginx-$NGINX_VERSION \
