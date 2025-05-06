@@ -58,7 +58,7 @@ jobs:
           docker run --rm -v $(pwd)/tests.sh:/tests.sh --entrypoint sh ${{ env.IMAGE_NAME }} /tests.sh
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         if: github.event_name != 'pull_request'
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -66,7 +66,7 @@ jobs:
 
 
       - name: Build and publish multi-platform images
-        uses: docker/build-push-action@v3.0.0
+        uses: docker/build-push-action@v5.0.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
