@@ -6,8 +6,6 @@ on:
     branches:
       - master
       - mainline
-    tags:
-      - v[0-9]+.[0-9]+.[0-9]+
 
 env:
   IMAGE_NAME: fholzer/nginx-brotli
@@ -16,11 +14,20 @@ jobs:
   build-test-and-publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - name: Extract Version
+        id: get_version # You MUST set an ID to reference this step later
+        run: |
+          # Extract value
+          VERSION="v$(grep "^ARG NGINX_VERSION=" Dockerfile |head -1|cut -d= -f2)"
+
+          # Export to the output file
+          echo "nginx_version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v4.0.1
+        uses: docker/metadata-action@v5.7.0
         with:
           images: ${{ env.IMAGE_NAME }}
           flavor: |
@@ -28,17 +35,17 @@ jobs:
           tags: |
             type=raw,priority=1000,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
             type=raw,priority=1000,value=mainline-latest,enable=${{ github.ref == 'refs/heads/mainline' }}
-            type=match,priority=600,pattern=^(v\d+\.\d+\.\d+)$,group=0
+            type=raw,value=${{ steps.get_version.outputs.nginx_version }}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2.0.0
+        uses: docker/setup-qemu-action@v3.6.0
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1.7.0
+        uses: docker/setup-buildx-action@v3.10.0
 
       - name: Build amd64 image
-        uses: docker/build-push-action@v3.0.0
+        uses: docker/build-push-action@v7.1.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -58,7 +65,7 @@ jobs:
           docker run --rm -v $(pwd)/tests.sh:/tests.sh --entrypoint sh ${{ env.IMAGE_NAME }} /tests.sh
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         if: github.event_name != 'pull_request'
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -66,7 +73,7 @@ jobs:
 
 
       - name: Build and publish multi-platform images
-        uses: docker/build-push-action@v3.0.0
+        uses: docker/build-push-action@v7.1.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
