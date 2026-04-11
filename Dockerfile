@@ -4,6 +4,7 @@ ARG NGX_BROTLI_COMMIT=a71f9312c2deb28875acc7bacfdd5695a111aa53
 ARG CONFIG="\
 		--prefix=/etc/nginx \
 		--sbin-path=/usr/sbin/nginx \
+		--with-cc-opt='-Wno-error=unterminated-string-initialization' \
 		--modules-path=/usr/lib/nginx/modules \
 		--conf-path=/etc/nginx/nginx.conf \
 		--error-log-path=/var/log/nginx/error.log \
