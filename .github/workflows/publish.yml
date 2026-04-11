@@ -6,6 +6,7 @@ on:
     branches:
       - master
       - mainline
+      - rb/*
 
 env:
   IMAGE_NAME: fholzer/nginx-brotli
@@ -17,13 +18,14 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Extract Version
-        id: get_version # You MUST set an ID to reference this step later
+        id: get_version
         run: |
           # Extract value
-          VERSION="v$(grep "^ARG NGINX_VERSION=" Dockerfile |head -1|cut -d= -f2)"
-
+          FULL_VERSION="v$(grep "^ARG NGINX_VERSION=" Dockerfile |head -1|cut -d= -f2)"
+          MAJOR_MINOR_VERSION="v$(grep "^ARG NGINX_VERSION=" Dockerfile |head -1|cut -d= -f2|cut -d. -f1-2)"
           # Export to the output file
-          echo "nginx_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "nginx_full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
+          echo "nginx_major_minor=$MAJOR_MINOR_VERSION" >> $GITHUB_OUTPUT
 
       - name: Docker meta
         id: meta
@@ -35,7 +37,8 @@ jobs:
           tags: |
             type=raw,priority=1000,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
             type=raw,priority=1000,value=mainline-latest,enable=${{ github.ref == 'refs/heads/mainline' }}
-            type=raw,value=${{ steps.get_version.outputs.nginx_version }}
+            type=raw,value=${{ steps.get_version.outputs.nginx_full_version }}
+            type=raw,value=${{ steps.get_version.outputs.nginx_major_minor }},enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/heads/mainline' }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.6.0
