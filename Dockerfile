@@ -48,8 +48,13 @@ ARG CONFIG="\
 		--add-module=/usr/src/ngx_brotli \
 	"
 
-FROM alpine:$ALPINE_VERSION
-LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
+
+FROM alpine:$ALPINE_VERSION AS base
+
+RUN apk upgrade --no-cache
+
+
+FROM base AS builder
 
 ARG NGINX_VERSION
 ARG NGX_BROTLI_COMMIT
@@ -138,15 +143,17 @@ RUN \
 			| xargs -r apk info --installed \
 			| sort -u > /tmp/runDeps.txt
 
-FROM alpine:$ALPINE_VERSION
-ARG NGINX_VERSION
 
-COPY --from=0 /tmp/runDeps.txt /tmp/runDeps.txt
-COPY --from=0 /etc/nginx /etc/nginx
-COPY --from=0 /usr/lib/nginx/modules/*.so /usr/lib/nginx/modules/
-COPY --from=0 /usr/sbin/nginx /usr/sbin/nginx-debug /usr/sbin/
-COPY --from=0 /usr/share/nginx/html/* /usr/share/nginx/html/
-COPY --from=0 /usr/bin/envsubst /usr/local/bin/envsubst
+FROM base
+ARG NGINX_VERSION
+LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
+
+COPY --from=builder /tmp/runDeps.txt /tmp/runDeps.txt
+COPY --from=builder /etc/nginx /etc/nginx
+COPY --from=builder /usr/lib/nginx/modules/*.so /usr/lib/nginx/modules/
+COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx-debug /usr/sbin/
+COPY --from=builder /usr/share/nginx/html/* /usr/share/nginx/html/
+COPY --from=builder /usr/bin/envsubst /usr/local/bin/envsubst
 
 RUN \
 	addgroup -S nginx \
