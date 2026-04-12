@@ -27,7 +27,14 @@ jobs:
           FULL_VERSION="v$VERSION"
           MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1-2)
           MAJOR_MINOR_VERSION="v$MAJOR_MINOR"
-          LATEST_PATCH=$(git branch -ar --format "%(refname)" | grep "rb/v$MAJOR_MINOR" | sort -V | sed -e 's@^.*/rb/v@@' | tail -n 1)
+
+          # get versions from master and mainline
+          MASTER_VERSION=$(git show master:Dockerfile | grep "^ARG NGINX_VERSION=" | head -1 | cut -d= -f2)
+          MAINLINE_VERSION=$(git show master:Dockerfile | grep "^ARG NGINX_VERSION=" | head -1 | cut -d= -f2)
+
+          ALL_VERSIONS=$(git branch -ar --format "%(refname)" | grep "rb/v" | sed -e 's@^.*/rb/v@@')
+          ALL_VERSIONS="$ALL_VERSIONS"$'\n'"$MASTER_VERSION"$'\n'"$MAINLINE_VERSION"
+          LATEST_PATCH=$(echo "$ALL_VERSIONS" | grep "^$MAJOR_MINOR" | sort -V | tail -n 1)
           # Export to the output file
           echo "nginx_full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
           echo "nginx_major_minor=$MAJOR_MINOR_VERSION" >> $GITHUB_OUTPUT
