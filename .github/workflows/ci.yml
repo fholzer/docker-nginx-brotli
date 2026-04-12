@@ -36,3 +36,20 @@ jobs:
       - name: Test
         run: |
           docker run --rm -v $(pwd)/tests.sh:/tests.sh --entrypoint sh nginx-brotli /tests.sh
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}
+          exit-code: '1' # This will fail the pipeline if vulnerabilities are found
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
