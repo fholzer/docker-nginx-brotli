@@ -16,16 +16,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Extract Version
         id: get_version
         run: |
           # Extract value
-          FULL_VERSION="v$(grep "^ARG NGINX_VERSION=" Dockerfile |head -1|cut -d= -f2)"
-          MAJOR_MINOR_VERSION="v$(grep "^ARG NGINX_VERSION=" Dockerfile |head -1|cut -d= -f2|cut -d. -f1-2)"
+          VERSION=$(grep "^ARG NGINX_VERSION=" Dockerfile | head -1 | cut -d= -f2)
+          FULL_VERSION="v$VERSION"
+          MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1-2)
+          MAJOR_MINOR_VERSION="v$MAJOR_MINOR"
+          LATEST_PATCH=$(git branch -ar --format "%(refname)" | grep "rb/v$MAJOR_MINOR" | sort -V | sed -e 's@^.*/rb/v@@' | tail -n 1)
           # Export to the output file
           echo "nginx_full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
           echo "nginx_major_minor=$MAJOR_MINOR_VERSION" >> $GITHUB_OUTPUT
+          echo "nginx_latest_patch=$LATEST_PATCH" >> $GITHUB_OUTPUT
 
       - name: Docker meta
         id: meta
@@ -38,7 +44,7 @@ jobs:
             type=raw,priority=1000,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
             type=raw,priority=1000,value=mainline-latest,enable=${{ github.ref == 'refs/heads/mainline' }}
             type=raw,value=${{ steps.get_version.outputs.nginx_full_version }}
-            type=raw,value=${{ steps.get_version.outputs.nginx_major_minor }},enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/heads/mainline' }}
+            type=raw,value=${{ steps.get_version.outputs.nginx_major_minor }},enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/heads/mainline' || github.ref == format('refs/heads/rb/v{0}', steps.get_version.outputs.nginx_latest_patch) }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.6.0
