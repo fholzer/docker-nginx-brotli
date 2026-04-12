@@ -1,0 +1,47 @@
+---
+name: Scheduled Rebuild Trigger
+on:
+  schedule:
+    - cron: '0 3 * * 0'
+  workflow_dispatch: # Allow manual trigger for testing
+
+jobs:
+  list-branches:
+    runs-on: ubuntu-latest
+    outputs:
+      branch_list: ${{ steps.set-list.outputs.branches }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Necessary to see all branches
+
+      - name: Generate Branch List
+        id: set-list
+        run: |
+          # 1. Get remote branches matching rb/v*
+          # 2. Add static master and mainline
+          # 3. Format as a JSON array for the matrix
+          
+          RAW_BRANCHES=$(git branch -r --format "%(refname)" | grep -E 'origin/(master|mainline|rb/v\.*)' | sed 's/origin\///' | xargs)
+          
+          # Convert "master mainline rb/v1" to ["master", "mainline", "rb/v1"]
+          JSON_LIST=$(echo $RAW_BRANCHES | jq -R -c 'split(" ")')
+          
+          echo "branches=$JSON_LIST" >> $GITHUB_OUTPUT
+
+  trigger-builds:
+    needs: list-branches
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        branch: ${{ fromJson(needs.list-branches.outputs.branch_list) }}
+    permissions:
+      actions: write  # Required to use 'gh workflow run'
+      contents: read  # Required to list branches
+    steps:
+      - name: Trigger Build and Publish on ${{ matrix.branch }}
+        run: |
+          gh workflow run publish.yml --ref ${{ matrix.branch }}
+        env:
+          GH_TOKEN: ${{ github.token }}
