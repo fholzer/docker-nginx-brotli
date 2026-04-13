@@ -30,7 +30,7 @@ jobs:
           docker build -t docker.io/fholzer/nginx-brotli:${{ github.sha }} .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:
           image-ref: 'docker.io/fholzer/nginx-brotli:${{ github.sha }}'
           format: 'template'
