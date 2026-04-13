@@ -8,6 +8,10 @@ on:
       - mainline
       - rb/*
 
+permissions:
+  contents: read
+  security-events: write
+
 env:
   IMAGE_NAME: nginx-brotli
 
