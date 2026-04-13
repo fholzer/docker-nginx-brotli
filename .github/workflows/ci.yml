@@ -23,7 +23,7 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v3.10.0
+        uses: docker/setup-buildx-action@v4.0.0
 
       - name: Build amd64 image
         uses: docker/build-push-action@v7.1.0
