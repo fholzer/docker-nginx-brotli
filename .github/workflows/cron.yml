@@ -23,7 +23,7 @@ jobs:
           # 2. Add static master and mainline
           # 3. Format as a JSON array for the matrix
           
-          RAW_BRANCHES=$(git branch -r --format "%(refname)" | grep -E 'origin/(master|mainline|rb/v\.*)' | sed 's/origin\///' | xargs)
+          RAW_BRANCHES=$(git branch -r --format "%(refname)" | grep -E 'origin/(master|mainline|rb/v\.*)' | xargs)
           
           # Convert "master mainline rb/v1" to ["master", "mainline", "rb/v1"]
           JSON_LIST=$(echo $RAW_BRANCHES | jq -R -c 'split(" ")')
