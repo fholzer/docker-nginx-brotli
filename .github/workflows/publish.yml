@@ -7,6 +7,7 @@ on:
       - master
       - mainline
       - rb/*
+  workflow_dispatch: # Allow manual trigger for automated rebuilds
 
 env:
   IMAGE_NAME: fholzer/nginx-brotli
