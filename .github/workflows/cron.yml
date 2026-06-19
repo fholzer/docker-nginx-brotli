@@ -12,7 +12,7 @@ jobs:
       branch_list: ${{ steps.set-list.outputs.branches }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Necessary to see all branches
 
@@ -41,7 +41,7 @@ jobs:
       contents: read  # Required to list branches
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Necessary to see all branches
       - name: Trigger Build and Publish on ${{ matrix.branch }}
