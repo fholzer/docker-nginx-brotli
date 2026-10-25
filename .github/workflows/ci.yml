@@ -1,23 +1,102 @@
 ---
 name: CI
 
+
 on:
   push:
     branches-ignore:
       - master
-      - mainline
-      - rb/*
+      - main
 
-permissions:
-  contents: read
-  security-events: write
+  # pull_request:
+  #   branches-ignore:
+  #     - master
+  #     - main
+  workflow_dispatch:
+    inputs:
+      pr_sha:
+        description: 'The exact head SHA of the PR commit'
+        required: false
+        type: string
+        default: ""
+
 
 env:
-  IMAGE_NAME: nginx-brotli
+  IMAGE_NAME: nginx-brotli-poc
+
 
 jobs:
+  build-version-list:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    outputs:
+      nginx_versions: ${{ steps.nginx_versions.outputs.nginx_versions }}
+    steps:
+      # The check-versions workflow creates a PR when it detects new versions. Because workflows
+      # don't trigger other workflows automatically, it invokes this workflow via workflow_dispatch
+      # on the PR it creates.
+      # For some reason only known to GitHub, even explicitely triggered workflows don't show up as
+      # CI checks on PRs, so we have to manually set the status on the PR branch's HEAD SHA.
+      - name: Create GitHub Check Run
+        run: |
+          if [[ "${{github.event_name}}" == "workflow_dispatch" && "${{github.event.inputs.pr_sha}}" != "" ]]; then
+            gh api --method POST /repos/${{ github.repository }}/statuses/${{ github.event.inputs.pr_sha }} \
+              -f state="pending" \
+              -f context="CI" \
+              -f description="Running automated workflows..." \
+              -f target_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Read nginx versions
+        id: nginx_versions
+        run: python ci/getVersionsForCi.py
+
+
+  build-base:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v4.2.0
+
+      - name: Build builder-base image
+        uses: docker/build-push-action@v7.3.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          platforms: linux/amd64
+          target: builder-base
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+
   build-and-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      matrix:
+        nginx_version: ${{ fromJson(needs.build-version-list.outputs.nginx_versions) }}
+    needs:
+      - build-version-list
+      - build-base
+
     steps:
       - uses: actions/checkout@v7
 
@@ -31,20 +110,22 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           platforms: linux/amd64
-          push: false
-          tags: ${{ env.IMAGE_NAME }}
+          build-args: |
+            NGINX_VERSION=${{ matrix.nginx_version }}
+          tags: ${{ env.IMAGE_NAME }}:${{ matrix.nginx_version }}
+          # output to docker so we can test in next step
           load: true
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Test
         run: |
-          docker run --rm -v $(pwd)/tests.sh:/tests.sh --entrypoint sh nginx-brotli /tests.sh
+          docker run --rm -v $(pwd)/tests/tests.sh:/tests.sh --entrypoint sh ${{ env.IMAGE_NAME }}:${{ matrix.nginx_version }} /tests.sh
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ env.IMAGE_NAME }}
+          image-ref: ${{ env.IMAGE_NAME }}:${{ matrix.nginx_version }}
           exit-code: '1' # This will fail the pipeline if vulnerabilities are found
           ignore-unfixed: true
           vuln-type: 'os,library'
@@ -57,3 +138,29 @@ jobs:
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
+
+  update-ci-status:
+    runs-on: ubuntu-latest
+    permissions:
+      statuses: write
+    needs:
+      - build-and-test
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.pr_sha != '' && always()
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Update GitHub Check Run
+        run: |
+          if [ "${{ needs.build-and-test.result }}" = "success" ]; then
+            STATE="success"
+            DESC="All integration tests passed successfully!"
+          else
+            STATE="failure"
+            DESC="Integration tests failed. Check logs."
+          fi
+
+          gh api --method POST /repos/${{ github.repository }}/statuses/${{ github.event.inputs.pr_sha }} \
+            -f state="$STATE" \
+            -f context="CI" \
+            -f description="$DESC" \
+            -f target_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

@@ -2,64 +2,88 @@
 name: Publish
 
 on:
-  push:
-    branches:
-      - master
-      - mainline
-      - rb/*
-  workflow_dispatch: # Allow manual trigger for automated rebuilds
+  # schedule:
+  #   - cron: '20 11 * * 0'
+  # push:
+  #   branches:
+  #     - main
+  workflow_dispatch:
+
 
 env:
-  IMAGE_NAME: fholzer/nginx-brotli
+  IMAGE_NAME: fholzer/nginx-brotli-poc
+  TARGET_ARCHS: linux/amd64,linux/arm64,linux/ppc64le
+
 
 jobs:
-  build-test-and-publish:
+  build-version-list:
     runs-on: ubuntu-latest
+    outputs:
+      nginx_versions: ${{ steps.nginx_versions.outputs.nginx_versions }}
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
 
-      - name: Extract Version
-        id: get_version
+      - name: Read nginx versions
+        id: nginx_versions
         run: |
-          # Extract value
-          VERSION=$(grep "^ARG NGINX_VERSION=" Dockerfile | head -1 | cut -d= -f2)
-          FULL_VERSION="v$VERSION"
-          MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1-2)
-          MAJOR_MINOR_VERSION="v$MAJOR_MINOR"
+          (
+            echo -n "nginx_versions="
+            jq -R -s -c '[split("\n")[]|select(. | length > 0)]' < versions.txt
+          ) >> "$GITHUB_OUTPUT"
 
-          # get versions from master and mainline
-          MASTER_VERSION=$(git show master:Dockerfile | grep "^ARG NGINX_VERSION=" | head -1 | cut -d= -f2)
-          MAINLINE_VERSION=$(git show master:Dockerfile | grep "^ARG NGINX_VERSION=" | head -1 | cut -d= -f2)
 
-          ALL_VERSIONS=$(git branch -ar --format "%(refname)" | grep "rb/v" | sed -e 's@^.*/rb/v@@')
-          ALL_VERSIONS="$ALL_VERSIONS"$'\n'"$MASTER_VERSION"$'\n'"$MAINLINE_VERSION"
-          LATEST_PATCH=$(echo "$ALL_VERSIONS" | grep "^$MAJOR_MINOR" | sort -V | tail -n 1)
-          # Export to the output file
-          echo "nginx_full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
-          echo "nginx_major_minor=$MAJOR_MINOR_VERSION" >> $GITHUB_OUTPUT
-          echo "nginx_latest_patch=$LATEST_PATCH" >> $GITHUB_OUTPUT
+  build-base:
+    runs-on: ubuntu-latest
 
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v6.2.0
-        with:
-          images: ${{ env.IMAGE_NAME }}
-          flavor: |
-            latest=false
-          tags: |
-            type=raw,priority=1000,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-            type=raw,priority=1000,value=mainline-latest,enable=${{ github.ref == 'refs/heads/mainline' }}
-            type=raw,value=${{ steps.get_version.outputs.nginx_full_version }}
-            type=raw,value=${{ steps.get_version.outputs.nginx_major_minor }},enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/heads/mainline' || github.ref == format('refs/heads/rb/v{0}', steps.get_version.outputs.nginx_latest_patch) }}
+    steps:
+      - uses: actions/checkout@v7
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4.2.0
+        uses: docker/setup-qemu-action@v4.0.0
 
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v4.2.0
+
+      - name: Build builder-base image
+        uses: docker/build-push-action@v7.3.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          platforms: ${{ env.TARGET_ARCHS }}
+          target: builder-base
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+
+  build-test-and-publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: main
+    strategy:
+      matrix:
+        nginx_version: ${{ fromJson(needs.build-version-list.outputs.nginx_versions) }}
+    needs:
+      - build-version-list
+      - build-base
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Generate image tags
+        id: image_tags
+        run: python ci/getPublishTags.py ${{ matrix.nginx_version }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4.0.0
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v4.0.0
 
       - name: Build amd64 image
         uses: docker/build-push-action@v7.3.0
@@ -67,8 +91,10 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           platforms: linux/amd64
-          push: false
-          tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            NGINX_VERSION=${{ matrix.nginx_version }}
+          tags: ${{ env.IMAGE_NAME }}:${{ matrix.nginx_version }}
+          # output to docker so we can test in next step
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -79,23 +105,31 @@ jobs:
 
       - name: Test
         run: |
-          docker run --rm -v $(pwd)/tests.sh:/tests.sh --entrypoint sh ${{ env.IMAGE_NAME }} /tests.sh
+          docker run --rm -v $(pwd)/tests/tests.sh:/tests.sh --entrypoint sh ${{ env.IMAGE_NAME }}:${{ matrix.nginx_version }} /tests.sh
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
-        if: github.event_name != 'pull_request'
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          flavor: |
+            latest=false
+          images: ${{ env.IMAGE_NAME }}
+          tags: ${{ steps.image_tags.outputs.nginx_tags }}
 
       - name: Build and publish multi-platform images
         uses: docker/build-push-action@v7.3.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          platforms: linux/amd64,linux/arm64,linux/ppc64le
+          platforms: ${{ env.TARGET_ARCHS }}
+          build-args: |
+            NGINX_VERSION=${{ matrix.nginx_version }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max

@@ -1,5 +1,5 @@
-ARG ALPINE_VERSION=latest
-ARG NGINX_VERSION=1.30.4
+ARG ALPINE_VERSION=3
+ARG NGINX_VERSION
 ARG NGX_BROTLI_COMMIT=a71f9312c2deb28875acc7bacfdd5695a111aa53
 ARG CONFIG="\
 		--prefix=/etc/nginx \
@@ -54,11 +54,7 @@ FROM alpine:$ALPINE_VERSION AS base
 RUN apk upgrade --no-cache
 
 
-FROM base AS builder
-
-ARG NGINX_VERSION
-ARG NGX_BROTLI_COMMIT
-ARG CONFIG
+FROM base AS builder-base
 
 RUN \
 	apk add --no-cache --virtual .build-deps \
@@ -88,6 +84,13 @@ RUN \
 SHELL ["/bin/bash", "-x", "-c"]
 
 COPY gpg/ /tmp/gpg
+
+
+FROM builder-base AS builder
+
+ARG NGINX_VERSION
+ARG NGX_BROTLI_COMMIT
+ARG CONFIG
 
 RUN \
 	mkdir -p /usr/src/ngx_brotli \
@@ -167,8 +170,8 @@ RUN \
 	&& ln -sf /dev/stdout /var/log/nginx/access.log \
 	&& ln -sf /dev/stderr /var/log/nginx/error.log
 
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
+COPY conf/nginx.conf /etc/nginx/nginx.conf
+COPY conf/nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80 443
 

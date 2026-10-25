@@ -1,0 +1,99 @@
+---
+name: Check Nginx Versions
+
+on:
+  # schedule:
+  #   - cron: '30 0 * * *'  # Daily at 00:30 UTC
+  workflow_dispatch:        # Allow manual trigger
+
+
+env:
+  NGINX_REPO_OWNER: nginx
+  NGINX_REPO_NAME: nginx
+  BASE_BRANCH: main
+  PR_TITLE_PREFIX: "ci: add new nginx versions"
+  BOT_LOGIN: github-actions[bot]
+
+jobs:
+  check-versions:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write  # Required to use 'gh workflow run'
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check for new nginx versions
+        id: check
+        run: |
+          python ci/checkNginxVersions.py \
+            --repo ${{ env.NGINX_REPO_OWNER }}/${{ env.NGINX_REPO_NAME }} \
+            --versions-file versions.txt \
+            --output json > /tmp/versions-result.json
+
+          # Check if there are missing versions using jq
+          MISSING_COUNT=$(jq '[.missing.stable[], .missing.mainline[]] | length' /tmp/versions-result.json)
+
+          echo "missing_count=$MISSING_COUNT" >> "$GITHUB_OUTPUT"
+          echo "result_file=/tmp/versions-result.json" >> "$GITHUB_OUTPUT"
+
+      - name: Exit if no missing versions
+        if: steps.check.outputs.missing_count == '0'
+        run: echo "No new nginx versions to add."
+
+      - name: Get existing PR
+        if: steps.check.outputs.missing_count > 0
+        id: existing-pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER=$(gh pr list \
+            --state open \
+            --base ${{ env.BASE_BRANCH }} \
+            --author ${{ env.BOT_LOGIN }} \
+            --search "${{ env.PR_TITLE_PREFIX }}" \
+            --json number \
+            | jq -r '.[0].number // empty')
+          PR_REF=$(gh pr list \
+            --state open \
+            --base ${{ env.BASE_BRANCH }} \
+            --author ${{ env.BOT_LOGIN }} \
+            --search "${{ env.PR_TITLE_PREFIX }}" \
+            --json headRefName \
+            | jq -r '.[0].headRefName // empty')
+
+          echo "pr_number=${PR_NUMBER:-}"
+          echo "pr_number=${PR_NUMBER:-}" >> "$GITHUB_OUTPUT"
+          echo "pr_ref=${PR_REF:-}"
+          echo "pr_ref=${PR_REF:-}" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update PR
+        id: update-pr
+        if: steps.check.outputs.missing_count > 0
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXISTING_PR: ${{ steps.existing-pr.outputs.pr_number }}
+        run: |
+          python ci/updateVersionsPr.py \
+            --result ${{ steps.check.outputs.result_file }} \
+            --base-branch ${{ env.BASE_BRANCH }} \
+            --pr-number "${{ env.EXISTING_PR }}" \
+            --pr-branch "${{ steps.existing-pr.outputs.pr_ref }}" \
+            --title-prefix "${{ env.PR_TITLE_PREFIX }}" \
+            --output "$GITHUB_OUTPUT"
+
+      - name: Trigger CI Workflow
+        if: steps.check.outputs.missing_count > 0 && steps.update-pr.outputs.changes > 0
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # get sha of branch head
+          PR_SHA="$(gh api repos/${{ github.repository }}/git/ref/heads/${{ steps.update-pr.outputs.branch }} --jq .object.sha)"
+          gh workflow run ci.yml --ref ${{ steps.update-pr.outputs.branch }} -f pr_sha="$PR_SHA"
