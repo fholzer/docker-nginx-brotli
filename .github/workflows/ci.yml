@@ -22,7 +22,7 @@ on:
 
 
 env:
-  IMAGE_NAME: nginx-brotli-poc
+  IMAGE_NAME: nginx-brotli
 
 
 jobs:
