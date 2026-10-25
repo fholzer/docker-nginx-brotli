@@ -11,7 +11,7 @@ on:
 
 
 env:
-  IMAGE_NAME: fholzer/nginx-brotli-poc
+  IMAGE_NAME: fholzer/nginx-brotli
   TARGET_ARCHS: linux/amd64,linux/arm64,linux/ppc64le
 
 
