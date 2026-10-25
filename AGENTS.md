@@ -40,7 +40,7 @@ Multi-stage Docker build:
 
 1. **`base`** — Alpine Linux with `apk upgrade`
 2. **`builder-base`** — Build dependencies (gcc, openssl-dev, pcre-dev, zlib-dev, etc.) + brotli build deps (cmake, git, autoconf, libtool)
-3. **`builder`** — Fetches nginx source, fetches ngx_brotli at pinned commit (`a71f9312c2deb28875acc7bacfdd5695a111aa53`), configures and compiles
+3. **`builder`** — Fetches nginx source, fetches ngx_brotli at pinned commit (`53e0fb55f250f48fe80c0ddbf6c0f7103cdbaae1`), configures and compiles
 
 **Build args:**
 
@@ -48,7 +48,7 @@ Multi-stage Docker build:
 |---|---|---|
 | `ALPINE_VERSION` | `latest` | Alpine base image tag |
 | `NGINX_VERSION` | *(required)* | nginx version to build |
-| `NGX_BROTLI_COMMIT` | `a71f9312c2deb28875acc7bacfdd5695a111aa53` | ngx_brotli git commit |
+| `NGX_BROTLI_COMMIT` | `53e0fb55f250f48fe80c0ddbf6c0f7103cdbaae1` | ngx_brotli git commit |
 | `CONFIG` | *(long --configure string)* | nginx build configuration |
 
 ### [`versions.txt`](versions.txt)
@@ -162,7 +162,7 @@ docker buildx build --platform linux/amd64,linux/arm64,linux/ppc64le \
 ## Brotli Module
 
 - **Source:** https://github.com/google/ngx_brotli
-- **Pinned commit:** `a71f9312c2deb28875acc7bacfdd5695a111aa53`
+- **Pinned commit:** `53e0fb55f250f48fe80c0ddbf6c0f7103cdbaae1`
 - **Configuration directives:** See [ngx_brotli docs](https://github.com/google/ngx_brotli#configuration-directives)
 
 Available directives in this image:
