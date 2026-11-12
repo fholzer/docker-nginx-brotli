@@ -2,8 +2,8 @@
 name: Check Nginx Versions
 
 on:
-  # schedule:
-  #   - cron: '30 0 * * *'  # Daily at 00:30 UTC
+  schedule:
+    - cron: '30 0 * * *'  # Daily at 00:30 UTC
   workflow_dispatch:        # Allow manual trigger
 
 
