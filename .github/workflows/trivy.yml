@@ -25,9 +25,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
+      - name: Determine latest nginx version
+        id: nginx_version
+        run: |
+          NGINX_VERSION=$(sort -V versions.txt | tail -n 1)
+          echo "nginx_version=$NGINX_VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Build an image from Dockerfile
         run: |
-          docker build -t docker.io/fholzer/nginx-brotli:${{ github.sha }} .
+          docker build --build-arg NGINX_VERSION=${{ steps.nginx_version.outputs.nginx_version }} -t docker.io/fholzer/nginx-brotli:${{ github.sha }} .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
