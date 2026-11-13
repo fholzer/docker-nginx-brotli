@@ -2,8 +2,8 @@
 name: Publish
 
 on:
-  # schedule:
-  #   - cron: '20 11 * * 0'
+  schedule:
+    - cron: '20 11 * * 0'
   # push:
   #   branches:
   #     - main
